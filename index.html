@@ -796,17 +796,23 @@ body{
     else if(patience >= 50 && state==='idle') doGasp();
   }
 
-  // zone wiring (hit areas sit above visuals)
-  const zones = [
-    ['headHit','head'], ['noseHit','nose'], ['bellyHit','belly'], ['tailHit','tail'],
-    ['earL','earL'], ['earR','earR']
-  ];
-  zones.forEach(([id,kind])=>{
-    const el=$(id);
-    el.style.pointerEvents='all';
-    el.addEventListener('pointerdown', e=>{ e.stopPropagation(); poke(kind); });
-  });
-  catwrap.addEventListener('pointerdown', ()=>poke('head'));
+  // zone wiring: resolve the poke target from SVG coordinates (stacking-proof)
+  const catSVGel = document.getElementById('catSVG');
+  function zoneAt(clientX, clientY){
+    const pt = catSVGel.createSVGPoint();
+    pt.x = clientX; pt.y = clientY;
+    const m = catSVGel.getScreenCTM();
+    if(!m) return 'head';
+    const p = pt.matrixTransform(m.inverse());
+    const x = p.x, y = p.y;
+    if(Math.hypot(x-200,y-205) < 34) return 'nose';
+    if(y < 132 && x >= 96 && x < 170) return 'earL';
+    if(y < 132 && x >= 230 && x <= 304) return 'earR';
+    if(x > 272 && y > 240 && y < 400) return 'tail';
+    if(Math.hypot(x-200,y-414) < 72) return 'belly';
+    return 'head';
+  }
+  catwrap.addEventListener('pointerdown', e=>poke(zoneAt(e.clientX, e.clientY)));
 
   /* ---------- gaze + head tracking ---------- */
   let tx=0, ty=0, cx=0, cy=0, hx=0, hy=0;
