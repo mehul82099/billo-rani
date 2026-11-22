@@ -185,7 +185,7 @@ body{
   -webkit-user-drag:none;
 }
 .catstack img.on{opacity:1}
-@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.014)}}
+@keyframes breathe{0%,100%{transform:scale(1) rotate(-.7deg)}50%{transform:scale(1.014) rotate(.7deg)}}
 @keyframes shake{0%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-1px)}100%{transform:translate(1px,1px)}}
 .squish{animation:squish .32s cubic-bezier(.34,1.56,.64,1)}
 @keyframes squish{0%{transform:scale(1)}35%{transform:scaleY(.92) scaleX(1.06)}100%{transform:scale(1)}}
@@ -219,6 +219,7 @@ body{
   white-space:nowrap;
 }
 .boxsign.on{display:block}
+.stage.boxed .ringlabel{display:none}
 .boxsign small{display:block;font-family:'Space Grotesk';font-size:11px;letter-spacing:.3em;color:var(--ink-dim);margin-top:7px}
 
 /* ---------- patience ---------- */
@@ -288,7 +289,7 @@ body{
 </style>
 </head>
 <body>
-<!-- build: v2-3d-20261122 -->
+<!-- build: v2b-3d-20261122 -->
 
 <div class="grain"></div>
 <div class="vignette"></div>
@@ -493,6 +494,7 @@ body{
     catstack.classList.add('popout');
     const toBox = ()=>{
       face('box');
+      stage.classList.add('boxed');
       catstack.classList.remove('popout');
       catstack.classList.add('popin');
       setTimeout(()=>catstack.classList.remove('popin'), 650);
@@ -504,6 +506,7 @@ body{
     setTimeout(()=>{
       // reset
       boxsign.classList.remove('on');
+      stage.classList.remove('boxed');
       burst.classList.remove('go');
       face('base');
       setPatience(0);
@@ -614,4 +617,4 @@ body{
 })();
 </script>
 </body>
-</html>
+                           </html>
