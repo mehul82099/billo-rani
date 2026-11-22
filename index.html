@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>BILLO — Chief Nap Officer</title>
+<meta name="description" content="Billo is a cat with opinions. Poke her, boop her, pull her tail. Every move gets a reaction. A fully interactive character website.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e1a;
+  --ink:#ffd9a0;
+  --ink-dim:rgba(255,217,160,.55);
+  --accent:#ff9d2e;
+  --circle:#0f766e;
+  --circle-glow:rgba(20,184,166,.35);
+  --strip:#ffd9a0;
+  --strip-ink:#160f04;
+  --red:#ff4d3a;
+  --card:#111726;
+  --line:rgba(255,217,160,.14);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Space Grotesk',system-ui,sans-serif;
+  overflow-x:hidden;
+  min-height:100svh;
+}
+::selection{background:var(--accent);color:#160f04}
+
+/* ---------- grain + vignette ---------- */
+.grain{
+  pointer-events:none;position:fixed;inset:-50%;z-index:60;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  animation:grain 7s steps(8) infinite;
+}
+@keyframes grain{
+  0%,100%{transform:translate(0,0)}20%{transform:translate(-4%,3%)}40%{transform:translate(3%,-4%)}
+  60%{transform:translate(-2%,-3%)}80%{transform:translate(4%,2%)}
+}
+.vignette{pointer-events:none;position:fixed;inset:0;z-index:59;
+  background:radial-gradient(ellipse at 50% 42%,transparent 55%,rgba(0,0,0,.55) 100%)}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:14px 22px;font-size:12px;letter-spacing:.04em;
+  background:linear-gradient(to bottom,rgba(10,14,26,.85),transparent);
+}
+.topbar .status{color:var(--ink-dim)}
+.topbar .status b{color:var(--ink);font-weight:500}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3ddc84;margin-right:7px;animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.mood{
+  position:absolute;left:50%;transform:translateX(-50%);
+  color:var(--ink-dim);white-space:nowrap;
+}
+.mood b{color:var(--ink);font-weight:700}
+.pill{
+  border:1px solid var(--line);border-radius:999px;padding:7px 14px;
+  background:rgba(255,217,160,.06);backdrop-filter:blur(6px);
+  color:var(--ink);font-weight:500;white-space:nowrap;
+}
+.pill b{color:var(--accent)}
+
+/* ---------- hero layout ---------- */
+.hero{
+  position:relative;min-height:100svh;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:end;
+  padding:100px 4vw 120px;gap:2vw;
+}
+.side{max-width:330px;padding-bottom:4vh;z-index:5}
+.side.left{justify-self:end;text-align:left}
+.side.right{justify-self:start}
+.kicker{
+  font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);
+  margin-bottom:12px;font-weight:700;
+}
+.side h2{
+  font-family:'Anton',sans-serif;font-size:clamp(26px,2.6vw,38px);
+  line-height:1.04;text-transform:uppercase;letter-spacing:.01em;margin-bottom:14px;
+}
+.side p{font-size:14px;line-height:1.65;color:var(--ink-dim)}
+.side p b{color:var(--ink);font-weight:500}
+
+/* stats */
+.stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:22px 34px;margin-bottom:26px;
+}
+.stat .num{font-family:'Anton',sans-serif;font-size:clamp(28px,3vw,42px);line-height:1;color:var(--ink)}
+.stat .num.hot{color:var(--red)}
+.stat .lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim);margin-top:6px}
+.minicard{
+  border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--card);
+}
+.minicard .t{font-weight:700;font-size:13.5px;margin-bottom:5px;color:var(--ink)}
+.minicard .d{font-size:12px;line-height:1.5;color:var(--ink-dim)}
+.minicard .tag{
+  display:inline-block;margin-top:9px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:#3ddc84;border:1px solid rgba(61,220,132,.35);padding:3px 9px;border-radius:999px;
+}
+
+/* ---------- giant title ---------- */
+.giant{
+  position:absolute;left:0;right:0;top:6.5svh;z-index:2;text-align:center;
+  pointer-events:none;user-select:none;
+}
+.giant h1{
+  font-family:'Anton',sans-serif;
+  font-size:clamp(60px,12.5vw,196px);
+  line-height:.92;letter-spacing:.005em;text-transform:uppercase;
+  color:var(--ink);
+  text-shadow:0 0 60px rgba(255,157,46,.14);
+}
+.giant .sub{
+  margin-top:1.2vh;font-size:clamp(10px,1.1vw,13px);letter-spacing:.34em;
+  text-transform:uppercase;color:var(--ink-dim);
+}
+
+/* ---------- stage ---------- */
+.stage{
+  position:relative;z-index:3;grid-column:2;align-self:end;justify-self:center;
+  width:min(54vw,430px);aspect-ratio:1/1.18;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.circle{
+  position:absolute;left:50%;bottom:4%;transform:translateX(-50%);
+  width:92%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%,#17a794,var(--circle) 62%,#0a4f4a 100%);
+  box-shadow:0 0 120px var(--circle-glow),inset 0 -30px 80px rgba(0,0,0,.35);
+  transition:background .5s;
+}
+.stage.mad .circle{background:radial-gradient(circle at 38% 30%,#ff6b4d,#c62f1d 62%,#6d0f06 100%)}
+.ringlabel{
+  position:absolute;left:50%;bottom:-7%;transform:translateX(-50%) rotate(-4deg);
+  font-family:'Anton',sans-serif;font-size:clamp(13px,1.4vw,18px);letter-spacing:.3em;
+  text-transform:uppercase;color:var(--ink);opacity:.85;white-space:nowrap;pointer-events:none;
+}
+
+/* annotations */
+.anno{position:absolute;font-size:9.5px;letter-spacing:.26em;color:var(--ink-dim);text-transform:uppercase;pointer-events:none;z-index:4}
+.anno::before{content:"";position:absolute;background:var(--line)}
+.anno.whisker{left:-13%;top:44%}
+.anno.whisker::before{width:9%;height:1px;right:-11%;top:50%}
+.anno.nap{right:-9%;top:16%}
+.anno.nap::before{width:1px;height:64px;left:50%;top:120%}
+
+/* speech bubble */
+.bubble{
+  position:absolute;z-index:6;top:5%;right:-7%;max-width:200px;
+  background:#fffdf6;color:#221806;font-size:13px;font-weight:500;line-height:1.35;
+  padding:10px 14px;border-radius:14px 14px 14px 3px;
+  box-shadow:0 8px 30px rgba(0,0,0,.4);
+  opacity:0;transform:translateY(8px) rotate(2deg) scale(.92);
+  transition:opacity .25s,transform .25s;
+  pointer-events:none;
+}
+.bubble.show{opacity:1;transform:translateY(0) rotate(0) scale(1)}
+.bubble::after{
+  content:"";position:absolute;left:14px;bottom:-8px;
+  border:9px solid transparent;border-top-color:#fffdf6;border-left-width:4px;border-right-width:12px;
+}
+
+/* ---------- cat ---------- */
+.catwrap{
+  position:relative;z-index:5;width:100%;height:100%;
+  display:flex;align-items:flex-end;justify-content:center;
+  cursor:pointer;touch-action:none;
+  -webkit-tap-highlight-color:transparent;
+}
+#catSVG{width:100%;height:100%;overflow:visible;user-select:none}
+#catAll{transform-origin:200px 400px;transition:transform .18s ease-out}
+.stage.mad #catAll{animation:shake .12s infinite}
+@keyframes shake{0%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-1px)}100%{transform:translate(1px,1px)}}
+
+#headG{transform-origin:200px 235px}
+#pupilL,#pupilR{transition:transform .06s linear}
+#eyeLopen,#eyeRopen,#eyeLlid,#eyeRlid{transform-box:fill-box;transform-origin:center}
+#earLg{transform-box:fill-box;transform-origin:80% 95%;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+#earRg{transform-box:fill-box;transform-origin:20% 95%;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+#tailG{transform-box:fill-box;transform-origin:12% 88%}
+#whiskL,#whiskR{transform-box:fill-box;transform-origin:center}
+
+/* expression defaults */
+.expr{transition:opacity .18s}
+.hidden{opacity:0!important}
+
+/* idle animations */
+.breathe{animation:breathe 3.6s ease-in-out infinite;transform-origin:200px 400px}
+@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.012)}}
+.tailsway{animation:tailsway 4.4s ease-in-out infinite}
+@keyframes tailsway{0%,100%{transform:rotate(0deg)}50%{transform:rotate(7deg)}}
+.stage.mad .tailsway{animation:tailsway .5s ease-in-out infinite}
+
+/* steam */
+.steampuff{opacity:0}
+.stage.mad .steampuff{animation:steam 1.1s ease-out infinite}
+.stage.mad .steampuff.p2{animation-delay:.35s}
+.stage.mad .steampuff.p3{animation-delay:.7s}
+@keyframes steam{
+  0%{opacity:0;transform:translateY(6px) scale(.5)}
+  25%{opacity:.9}
+  100%{opacity:0;transform:translateY(-46px) scale(1.5)}
+}
+
+/* angry tint */
+#angryTint{opacity:0;transition:opacity .4s}
+.stage.mad #angryTint{opacity:.55}
+
+/* explosion */
+.burst{
+  position:absolute;left:50%;bottom:34%;width:10px;height:10px;z-index:7;pointer-events:none;
+}
+.burst span{
+  position:absolute;left:0;top:0;width:9px;height:9px;border-radius:2px;
+  background:var(--accent);opacity:0;
+}
+.burst.go span{animation:fly .8s cubic-bezier(.17,.67,.35,1) forwards}
+.burst.go span:nth-child(3n){background:var(--ink)}
+.burst.go span:nth-child(4n){background:#ff4d6d;border-radius:50%}
+@keyframes fly{
+  0%{opacity:1;transform:translate(0,0) rotate(0) scale(1)}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rot)) scale(.3)}
+}
+.popout{animation:popout .55s cubic-bezier(.6,-.4,.8,.4) forwards!important}
+@keyframes popout{40%{transform:scale(1.15)}100%{transform:scale(0) translateY(-40px);opacity:0}}
+.popin{animation:popin .6s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes popin{0%{transform:scale(0) translateY(30px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+
+/* ---------- box break ---------- */
+.boxbreak{
+  position:absolute;left:50%;bottom:2%;transform:translateX(-50%);z-index:6;
+  width:78%;display:none;flex-direction:column;align-items:center;gap:14px;
+}
+.boxbreak.on{display:flex}
+.boxbreak svg{width:78%;max-width:340px}
+.boxsign{
+  font-family:'Anton',sans-serif;text-transform:uppercase;text-align:center;
+  font-size:clamp(20px,2.6vw,32px);letter-spacing:.06em;color:var(--ink);
+}
+.boxsign small{display:block;font-family:'Space Grotesk';font-size:11px;letter-spacing:.3em;color:var(--ink-dim);margin-top:7px}
+
+/* ---------- patience ---------- */
+.patience{
+  position:absolute;z-index:8;left:50%;transform:translateX(-50%);
+  bottom:calc(-1 * clamp(34px,5vh,54px));
+  display:flex;align-items:center;gap:10px;
+  font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);
+  white-space:nowrap;
+}
+.meter{
+  width:150px;height:8px;border-radius:99px;background:rgba(255,217,160,.12);
+  border:1px solid var(--line);overflow:hidden;
+}
+.meter i{
+  display:block;height:100%;width:0%;border-radius:99px;
+  background:linear-gradient(90deg,#3ddc84,#ffd166 55%,var(--red));
+  transition:width .3s ease-out;
+}
+#patVal{color:var(--ink);font-weight:700}
+
+/* ---------- marquee ---------- */
+.marquee{
+  position:relative;z-index:40;background:var(--strip);color:var(--strip-ink);
+  overflow:hidden;padding:12px 0;transform:rotate(-.6deg) scale(1.01);
+  border-top:1px solid rgba(0,0,0,.15);border-bottom:1px solid rgba(0,0,0,.15);
+}
+.marquee .track{
+  display:flex;gap:44px;width:max-content;white-space:nowrap;
+  font-family:'Anton',sans-serif;font-size:15px;letter-spacing:.14em;text-transform:uppercase;
+  animation:scroll 26s linear infinite;
+}
+.marquee .track span b{color:#c62f1d;font-weight:400;margin-right:44px}
+@keyframes scroll{to{transform:translateX(-50%)}}
+
+/* hint */
+.hint{
+  position:fixed;z-index:50;left:22px;bottom:22px;
+  font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);
+  background:rgba(10,14,26,.7);border:1px solid var(--line);border-radius:999px;
+  padding:9px 18px;backdrop-filter:blur(6px);pointer-events:none;
+  animation:hintfloat 2.6s ease-in-out infinite;
+}
+@keyframes hintfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;padding:150px 5vw 80px;gap:0}
+  .stage{grid-column:1;width:min(84vw,400px);margin:0 auto}
+  .side{max-width:none;padding-bottom:0}
+  .side.left{order:2;text-align:center;margin-top:7vh;justify-self:center}
+  .side.right{order:3;margin-top:6vh;justify-self:center;text-align:center}
+  .stats{justify-items:center;text-align:center}
+  .giant{top:6svh}
+  .giant .sub{font-size:9px;letter-spacing:.2em;padding:0 12px}
+  .bubble{right:0;top:9%;max-width:172px;font-size:12px}
+  .anno{display:none}
+  .ringlabel{display:none}
+  .topbar{padding:12px 14px;font-size:11px}
+  .mood{display:none}
+  .hint{left:50%;transform:translateX(-50%);bottom:12px;max-width:94vw;text-align:center;font-size:10px;padding:8px 14px;white-space:normal}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<header class="topbar">
+  <div class="status"><span class="dot"></span>Chief Nap Officer. <b>Accepting treats.</b></div>
+  <div class="mood">Mood sheet: <b id="moodLabel">Judging you</b></div>
+  <div class="pill">Boops received: <b id="boopCount">0</b></div>
+</header>
+
+<main class="hero">
+
+  <div class="giant">
+    <h1>BILLO</h1>
+    <div class="sub">Professional napper · Part-time menace · Full-time queen</div>
+  </div>
+
+  <aside class="side left">
+    <div class="kicker">The resident</div>
+    <h2>I sleep 16 hours and still judge your productivity.</h2>
+    <p>Ginger tabby. Four years old. Owns this house, the sofa, and <b>your</b> spot on it.
+    Has knocked one glass off every table she has ever met. Ignores her name unless
+    food is involved. The whiskers have their own management.</p>
+  </aside>
+
+  <div class="stage" id="stage">
+    <div class="circle"></div>
+    <div class="ringlabel">· certified drama ·</div>
+    <div class="anno whisker">whisker line</div>
+    <div class="anno nap">nap radius</div>
+    <div class="bubble" id="bubble">…</div>
+
+    <div class="catwrap" id="catwrap">
+      <svg id="catSVG" viewBox="0 0 400 470" xmlns="http://www.w3.org/2000/svg" aria-label="Billo the cat">
+        <defs>
+          <radialGradient id="fur" cx="45%" cy="35%" r="75%">
+            <stop offset="0%" stop-color="#fbbf5c"/>
+            <stop offset="55%" stop-color="#f59e2e"/>
+            <stop offset="100%" stop-color="#d97a10"/>
+          </radialGradient>
+          <radialGradient id="furDark" cx="50%" cy="40%" r="80%">
+            <stop offset="0%" stop-color="#e8930f"/>
+            <stop offset="100%" stop-color="#c96e08"/>
+          </radialGradient>
+          <linearGradient id="chestGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffe3b3"/>
+            <stop offset="100%" stop-color="#f7c877"/>
+          </linearGradient>
+          <radialGradient id="angryGrad" cx="50%" cy="45%" r="70%">
+            <stop offset="0%" stop-color="#ff5a3c" stop-opacity=".9"/>
+            <stop offset="100%" stop-color="#c2130b" stop-opacity=".9"/>
+          </radialGradient>
+        </defs>
+
+        <g id="catAll">
+        <g class="breathe">
+
+          <!-- tail (behind body) -->
+          <g id="tailG" class="tailsway">
+            <path id="tailZone" d="M282 388 C 340 380 372 340 366 292 C 362 262 344 246 326 252 C 312 257 310 274 320 282 C 332 291 344 282 343 268"
+              fill="none" stroke="url(#furDark)" stroke-width="30" stroke-linecap="round"/>
+            <path d="M330 258 l 18 -6 M334 276 l 18 -3" stroke="#a35508" stroke-width="7" stroke-linecap="round"/>
+            <path id="tailHit" d="M282 388 C 340 380 372 340 366 292 C 362 262 344 246 326 252" fill="none" stroke="rgba(0,0,0,0)" stroke-width="60" stroke-linecap="round"/>
+          </g>
+
+          <!-- body -->
+          <g id="bodyG">
+            <path d="M118 470 C 112 380 140 322 200 316 C 260 322 288 380 282 470 Z" fill="url(#fur)"/>
+            <ellipse cx="200" cy="418" rx="62" ry="52" fill="url(#chestGrad)"/>
+            <!-- paws -->
+            <g id="pawL">
+              <ellipse cx="150" cy="452" rx="34" ry="20" fill="url(#chestGrad)"/>
+              <path d="M140 458 v 8 M152 460 v 8" stroke="#d99a3f" stroke-width="3.5" stroke-linecap="round"/>
+            </g>
+            <g id="pawR">
+              <ellipse cx="250" cy="452" rx="34" ry="20" fill="url(#chestGrad)"/>
+              <path d="M248 460 v 8 M260 458 v 8" stroke="#d99a3f" stroke-width="3.5" stroke-linecap="round"/>
+            </g>
+            <ellipse id="bellyHit" cx="200" cy="412" rx="66" ry="52" fill="rgba(0,0,0,0)"/>
+          </g>
+
+          <!-- head -->
+          <g id="headG">
+            <!-- ears -->
+            <g id="earLg">
+              <path d="M112 128 C 100 82 108 48 130 34 C 152 50 162 84 158 118 Z" fill="url(#fur)"/>
+              <path id="earL" d="M122 116 C 114 84 120 60 132 50 C 146 62 152 86 149 110 Z" fill="#f78fb0"/>
+              <path d="M112 128 C 100 82 108 48 130 34 C 152 50 162 84 158 118 Z" fill="none" stroke="#c96e08" stroke-width="3"/>
+            </g>
+            <g id="earRg">
+              <path d="M288 128 C 300 82 292 48 270 34 C 248 50 238 84 242 118 Z" fill="url(#fur)"/>
+              <path id="earR" d="M278 116 C 286 84 280 60 268 50 C 254 62 248 86 251 110 Z" fill="#f78fb0"/>
+              <path d="M288 128 C 300 82 292 48 270 34 C 248 50 238 84 242 118 Z" fill="none" stroke="#c96e08" stroke-width="3"/>
+            </g>
+
+            <!-- face -->
+            <ellipse id="faceBase" cx="200" cy="180" rx="98" ry="88" fill="url(#fur)"/>
+            <ellipse cx="200" cy="180" rx="98" ry="88" fill="none" stroke="#c96e08" stroke-width="3"/>
+
+            <!-- forehead stripes -->
+            <path d="M178 100 q 4 18 2 30 M200 96 q 0 20 0 32 M222 100 q -4 18 -2 30" stroke="#c96e08" stroke-width="7" stroke-linecap="round" fill="none"/>
+            <path d="M118 168 q -14 4 -22 10 M118 192 q -14 6 -20 14 M282 168 q 14 4 22 10 M282 192 q 14 6 20 14" stroke="#c96e08" stroke-width="6" stroke-linecap="round" fill="none" opacity=".8"/>
+
+            <!-- muzzle -->
+            <ellipse cx="200" cy="222" rx="46" ry="34" fill="url(#chestGrad)"/>
+
+            <!-- blush -->
+            <ellipse id="blushL" class="expr hidden" cx="140" cy="212" rx="15" ry="9" fill="#ff8f6b" opacity=".65"/>
+            <ellipse id="blushR" class="expr hidden" cx="260" cy="212" rx="15" ry="9" fill="#ff8f6b" opacity=".65"/>
+
+            <!-- angry brows -->
+            <path id="browL" class="expr hidden" d="M140 138 L 182 152" stroke="#7a3d05" stroke-width="9" stroke-linecap="round"/>
+            <path id="browR" class="expr hidden" d="M260 138 L 218 152" stroke="#7a3d05" stroke-width="9" stroke-linecap="round"/>
+
+            <!-- EYES -->
+            <g id="eyeL">
+              <ellipse id="eyeLopen" cx="158" cy="172" rx="23" ry="25" fill="#fffdf4"/>
+              <g id="pupilL">
+                <ellipse cx="158" cy="172" rx="10" ry="12" fill="#2c1810"/>
+                <circle cx="154" cy="167" r="3.4" fill="#fff"/>
+              </g>
+              <ellipse id="eyeLlid" cx="158" cy="172" rx="24" ry="0.5" fill="#e8890c"/>
+            </g>
+            <g id="eyeR">
+              <ellipse cx="242" cy="172" rx="23" ry="25" fill="#fffdf4"/>
+              <g id="pupilR">
+                <ellipse cx="242" cy="172" rx="10" ry="12" fill="#2c1810"/>
+                <circle cx="238" cy="167" r="3.4" fill="#fff"/>
+              </g>
+              <ellipse id="eyeRlid" cx="242" cy="172" rx="24" ry="0.5" fill="#e8890c"/>
+            </g>
+            <!-- shocked wide eyes -->
+            <g id="eyesShock" class="expr hidden">
+              <ellipse cx="158" cy="172" rx="27" ry="30" fill="#fffdf4"/>
+              <ellipse cx="242" cy="172" rx="27" ry="30" fill="#fffdf4"/>
+              <circle cx="158" cy="172" r="6" fill="#2c1810"/>
+              <circle cx="242" cy="172" r="6" fill="#2c1810"/>
+            </g>
+            <!-- scowl eyes -->
+            <g id="eyesScowl" class="expr hidden">
+              <path d="M134 168 q 24 -14 48 0 q -24 20 -48 0 Z" fill="#fffdf4"/>
+              <path d="M218 168 q 24 -14 48 0 q -24 20 -48 0 Z" fill="#fffdf4"/>
+              <ellipse cx="160" cy="168" rx="8" ry="9" fill="#2c1810"/>
+              <ellipse cx="240" cy="168" rx="8" ry="9" fill="#2c1810"/>
+            </g>
+
+            <!-- nose (boop zone) -->
+            <g id="noseG">
+              <path id="nose" d="M190 200 L 210 200 L 200 213 Z" fill="#f76d8e" stroke="#d14a6e" stroke-width="2" stroke-linejoin="round"/>
+              <ellipse id="noseHit" cx="200" cy="205" rx="26" ry="20" fill="rgba(0,0,0,0)"/>
+            </g>
+
+            <!-- MOUTHS -->
+            <path id="mouthNeutral" class="expr" d="M200 213 q 0 10 -12 12 M200 213 q 0 10 12 12" stroke="#7a3d05" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <ellipse id="mouthGasp" class="expr hidden" cx="200" cy="226" rx="10" ry="13" fill="#7a3d05"/>
+            <ellipse cx="200" cy="231" rx="5" ry="6" fill="#f76d8e" class="expr hidden" id="gaspTongue"/>
+            <path id="mouthFrown" class="expr hidden" d="M182 232 q 18 -12 36 0" stroke="#7a3d05" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <g id="mouthGrin" class="expr hidden">
+              <path d="M178 218 q 22 20 44 0 q -4 22 -22 22 q -18 0 -22 -22 Z" fill="#7a3d05"/>
+              <path d="M188 232 q 12 8 24 0" stroke="#f76d8e" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </g>
+            <g id="mouthHiss" class="expr hidden">
+              <path d="M176 216 q 24 26 48 0 q -6 26 -24 26 q -18 0 -24 -26 Z" fill="#5b2404"/>
+              <path d="M184 218 l 6 10 l 6 -10 M204 218 l 6 10 l 6 -10" fill="#fff"/>
+              <ellipse cx="200" cy="234" rx="9" ry="6" fill="#f76d8e"/>
+            </g>
+
+            <!-- whiskers -->
+            <g id="whiskL" stroke="#ffe9c9" stroke-width="3" stroke-linecap="round" opacity=".9">
+              <path d="M128 200 L 78 190"/>
+              <path d="M128 212 L 74 212"/>
+              <path d="M128 224 L 80 236"/>
+            </g>
+            <g id="whiskR" stroke="#ffe9c9" stroke-width="3" stroke-linecap="round" opacity=".9">
+              <path d="M272 200 L 322 190"/>
+              <path d="M272 212 L 326 212"/>
+              <path d="M272 224 L 320 236"/>
+            </g>
+
+            <!-- angry tint -->
+            <ellipse id="angryTint" cx="200" cy="180" rx="98" ry="88" fill="url(#angryGrad)" pointer-events="none"/>
+
+            <!-- steam -->
+            <g id="steam" stroke="#ffe9c9" stroke-width="6" stroke-linecap="round" fill="none">
+              <path class="steampuff p1" d="M150 84 q -8 -10 0 -18 q 8 -8 0 -16"/>
+              <path class="steampuff p2" d="M200 74 q -8 -10 0 -18 q 8 -8 0 -16"/>
+              <path class="steampuff p3" d="M250 84 q -8 -10 0 -18 q 8 -8 0 -16"/>
+            </g>
+
+            <!-- head hit zone -->
+            <ellipse id="headHit" cx="200" cy="160" rx="92" ry="60" fill="rgba(0,0,0,0)"/>
+          </g>
+        </g>
+        </g>
+      </svg>
+    </div>
+
+    <div class="burst" id="burst"></div>
+
+    <!-- box break -->
+    <div class="boxbreak" id="boxbreak">
+      <svg class="popin" viewBox="0 0 340 220" xmlns="http://www.w3.org/2000/svg" aria-label="Billo hiding in a box">
+        <g>
+          <!-- tail sticking out -->
+          <g>
+            <path d="M282 60 C 300 44 304 26 296 14" fill="none" stroke="#e8930f" stroke-width="16" stroke-linecap="round">
+              <animateTransform attributeName="transform" type="rotate" values="0 282 60;12 282 60;0 282 60" dur="1.2s" repeatCount="indefinite"/>
+            </path>
+          </g>
+          <!-- back flaps -->
+          <path d="M58 92 L 20 56 L 96 62 Z" fill="#b07933"/>
+          <path d="M282 92 L 320 56 L 244 62 Z" fill="#b07933"/>
+          <!-- box body -->
+          <rect x="52" y="88" width="236" height="122" rx="8" fill="#c98d43"/>
+          <rect x="52" y="88" width="236" height="122" rx="8" fill="none" stroke="#8a5a1d" stroke-width="4"/>
+          <rect x="156" y="88" width="28" height="122" fill="#a86f2c" opacity=".7"/>
+          <!-- ears above rim -->
+          <path d="M132 92 C 126 62 132 42 146 32 C 160 44 166 66 163 90 Z" fill="#f59e2e" stroke="#c96e08" stroke-width="3"/>
+          <path d="M208 92 C 214 62 208 42 194 32 C 180 44 174 66 177 90 Z" fill="#f59e2e" stroke="#c96e08" stroke-width="3"/>
+          <!-- front flaps -->
+          <path d="M52 92 L 14 130 L 60 134 Z" fill="#d69b4d" stroke="#8a5a1d" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M288 92 L 326 130 L 280 134 Z" fill="#d69b4d" stroke="#8a5a1d" stroke-width="4" stroke-linejoin="round"/>
+          <!-- writing on box -->
+          <text x="170" y="168" text-anchor="middle" font-family="Anton, sans-serif" font-size="26" fill="#5b3a10" letter-spacing="3">DO NOT DISTURB</text>
+          <text x="170" y="192" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-size="12" fill="#6d4a1c" letter-spacing="2">PROPERTY OF BILLO</text>
+        </g>
+      </svg>
+      <div class="boxsign">Box break<small>back when the betrayal is forgiven</small></div>
+    </div>
+
+    <div class="patience">
+      <span>Patience</span>
+      <div class="meter"><i id="meterFill"></i></div>
+      <span id="patVal">0%</span>
+    </div>
+  </div>
+
+  <aside class="side right">
+    <div class="stats">
+      <div class="stat"><div class="num" id="statPokes">0</div><div class="lbl">Pokes today</div></div>
+      <div class="stat"><div class="num">214</div><div class="lbl">Naps this week</div></div>
+      <div class="stat"><div class="num">61</div><div class="lbl">Glasses pushed off</div></div>
+      <div class="stat"><div class="num hot" id="statBoxes">9</div><div class="lbl">Boxes claimed</div></div>
+    </div>
+    <div class="minicard">
+      <div class="t">The Sunday Sit</div>
+      <div class="d">Every Sunday she sits in the exact centre of whatever you were reading. No exceptions have been made. None are planned.</div>
+      <span class="tag">Ongoing series</span>
+    </div>
+  </aside>
+
+</main>
+
+<div class="marquee">
+  <div class="track" id="track">
+    <span>Machli Express <b>·</b> Gudda Toy Co <b>·</b> Aunty Ji Catnip <b>·</b> Pedal Paws <b>·</b> Chhota Sher Studios <b>·</b> Tapri Treats <b>·</b> Nimbu Vets <b>·</b> Box Bazaar <b>·</b></span>
+    <span>Machli Express <b>·</b> Gudda Toy Co <b>·</b> Aunty Ji Catnip <b>·</b> Pedal Paws <b>·</b> Chhota Sher Studios <b>·</b> Tapri Treats <b>·</b> Nimbu Vets <b>·</b> Box Bazaar <b>·</b></span>
+  </div>
+</div>
+
+<div class="hint" id="hint">Poke her · Boop the nose · Pull the tail</div>
+
+<script>
+(function(){
+  const stage   = document.getElementById('stage');
+  const catwrap = document.getElementById('catwrap');
+  const bubble  = document.getElementById('bubble');
+  const mood    = document.getElementById('moodLabel');
+  const meter   = document.getElementById('meterFill');
+  const patVal  = document.getElementById('patVal');
+  const boopEl  = document.getElementById('boopCount');
+  const pokesEl = document.getElementById('statPokes');
+  const boxesEl = document.getElementById('statBoxes');
+  const boxbreak= document.getElementById('boxbreak');
+  const burst   = document.getElementById('burst');
+  const hint    = document.getElementById('hint');
+  const catAll  = document.getElementById('catAll');
+  const headG   = document.getElementById('headG');
+  const pupilL  = document.getElementById('pupilL');
+  const pupilR  = document.getElementById('pupilR');
+  const earLg   = document.getElementById('earLg');
+  const earRg   = document.getElementById('earRg');
+  const tailG   = document.getElementById('tailG');
+  const whiskL  = document.getElementById('whiskL');
+  const whiskR  = document.getElementById('whiskR');
+  const eyeLlid = document.getElementById('eyeLlid');
+  const eyeRlid = document.getElementById('eyeRlid');
+  const eyeLopen= document.getElementById('eyeLopen');
+  let crossEyeUntil = 0;
+
+  const exprs = {
+    blush:[ 'blushL','blushR' ],
+    brows:[ 'browL','browR' ],
+    shock:[ 'eyesShock','mouthGasp','gaspTongue' ],
+    scowl:[ 'eyesScowl','mouthFrown' ],
+    grin: [ 'mouthGrin' ],
+    hiss: [ 'mouthHiss' ],
+    normalEyes:['eyeL','eyeR'],
+    neutralMouth:['mouthNeutral']
+  };
+  const $ = id => document.getElementById(id);
+  const show = ids => ids.forEach(i=>$(i).classList.remove('hidden'));
+  const hide = ids => ids.forEach(i=>$(i).classList.add('hidden'));
+
+  let state = 'idle';        // idle | blink | scowl | gasp | mad | box
+  let patience = 0;
+  let boops = 0, pokes = 0, boxes = 9;
+  let bubbleTimer = null, stateTimer = null, hintHidden = false;
+  let demoFreeze = false;
+
+  const LINES = {
+    ear:   ["Did you just touch my ear? Bold.","That ear is off limits. Forever."],
+    nose:  ["Boop registered. Rude, but registered.","You booped royalty."],
+    tail:  ["The tail is not a handle!","Pull it again. I dare you."],
+    belly: ["The belly is a trap. You fell for it.","Three pats maximum. That was four."],
+    head:  ["Hmm. Acceptable. Continue.","A head pat? I shall allow it. Once."],
+    blink: ["That was a cat kiss. You are welcome."],
+    scowl: ["Your funeral is on my calendar.","I am not angry. I am disappointed. Worse."],
+    gasp:  ["You did NOT just do that.","Scandal. Outrage. Drama."],
+    mad:   ["Enough. ENOUGH. I am filing a complaint.","My ancestors watched this. They hiss."],
+    box:   ["I live here now."]
+  };
+  const MOODS = {
+    idle:'Judging you', blink:'Slow blink', scowl:'Plotting', gasp:'Scandalized', mad:'Steaming', box:'Box break'
+  };
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+
+  function say(text, hold){
+    bubble.textContent = text;
+    bubble.classList.add('show');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(()=>bubble.classList.remove('show'), hold || 2600);
+  }
+
+  function setMood(m){ mood.textContent = MOODS[m] || m; }
+
+  function setPatience(v){
+    patience = Math.max(0, Math.min(100, v));
+    meter.style.width = patience + '%';
+    patVal.textContent = Math.round(patience) + '%';
+    if(patience >= 100 && state !== 'box') explode();
+  }
+
+  function baseFace(){
+    // restore neutral everything
+    hide([].concat(exprs.blush, exprs.brows, exprs.shock, exprs.scowl, exprs.grin, exprs.hiss));
+    show(exprs.normalEyes); show(exprs.neutralMouth);
+    earLg.style.transform=''; earRg.style.transform='';
+    whiskL.style.transform=''; whiskR.style.transform='';
+  }
+
+  function setState(s){
+    state = s; setMood(s); baseFace();
+    clearTimeout(stateTimer);
+    if(s==='idle') return;
+    stateTimer = setTimeout(()=>{
+      if(!demoFreeze && state!=='box' && state!=='mad'){ setState('idle'); }
+    }, 2800);
+  }
+
+  /* ---------- expressions ---------- */
+  function doBlink(){
+    setState('blink');
+    show(exprs.blush); hide(exprs.neutralMouth); show(exprs.grin);
+    // slow blink
+    eyeLlid.setAttribute('ry','25'); eyeRlid.setAttribute('ry','25');
+    setTimeout(()=>{ eyeLlid.setAttribute('ry','0.5'); eyeRlid.setAttribute('ry','0.5'); }, 650);
+    say(pick(LINES.blink));
+  }
+  function doScowl(){
+    setState('scowl');
+    hide(exprs.normalEyes); hide(exprs.neutralMouth); show(exprs.scowl);
+    earLg.style.transform='rotate(-14deg)'; earRg.style.transform='rotate(14deg)';
+    say(pick(LINES.scowl));
+  }
+  function doGasp(){
+    setState('gasp');
+    hide(exprs.normalEyes); hide(exprs.neutralMouth); show(exprs.shock);
+    say(pick(LINES.gasp));
+  }
+  function doGrin(){
+    setState('blink');
+    show(exprs.blush); hide(exprs.neutralMouth); show(exprs.grin);
+    say(pick(LINES.head));
+  }
+  function goMad(){
+    setState('mad');
+    hide(exprs.normalEyes); hide(exprs.neutralMouth);
+    show(['eyesScowl']); show(exprs.hiss); show(exprs.brows);
+    stage.classList.add('mad');
+    say(pick(LINES.mad), 3000);
+    setTimeout(()=>{ if(!demoFreeze && state==='mad'){ stage.classList.remove('mad'); setState('idle'); } }, 3200);
+  }
+
+  /* ---------- explosion / box break ---------- */
+  function explode(){
+    state='box'; setMood('box');
+    stage.classList.remove('mad');
+    say(pick(LINES.box), 4000);
+    // particles
+    burst.innerHTML='';
+    for(let i=0;i<16;i++){
+      const s=document.createElement('span');
+      const a=(Math.PI*2*i/16)+Math.random()*.4;
+      const d=90+Math.random()*130;
+      s.style.setProperty('--dx', Math.cos(a)*d+'px');
+      s.style.setProperty('--dy', Math.sin(a)*d-60+'px');
+      s.style.setProperty('--rot', (Math.random()*540-270)+'deg');
+      burst.appendChild(s);
+    }
+    burst.classList.add('go');
+    catAll.classList.add('popout');
+    if(demoFreeze){
+      catwrap.style.visibility='hidden';
+      boxbreak.classList.add('on');
+      boxbreak.querySelector('svg').style.animation='none';
+      boxes++; boxesEl.textContent = boxes;
+      return;
+    }
+    setTimeout(()=>{
+      catwrap.style.visibility='hidden';
+      boxbreak.classList.add('on');
+      boxes++; boxesEl.textContent = boxes;
+    }, 480);
+    setTimeout(()=>{
+      // reset
+      boxbreak.classList.remove('on');
+      catwrap.style.visibility='visible';
+      catAll.classList.remove('popout');
+      catAll.classList.add('popin');
+      setTimeout(()=>catAll.classList.remove('popin'), 650);
+      burst.classList.remove('go');
+      setPatience(0);
+      setState('idle');
+      say("I forgive you. Barely.", 2400);
+    }, 5200);
+  }
+
+  /* ---------- pokes ---------- */
+  function poke(kind){
+    if(state==='box') { say("Can't hear you. Cardboard.", 1800); return; }
+    hideHint();
+    pokes++; pokesEl.textContent = pokes;
+    if(kind==='nose'){ boops++; boopEl.textContent = boops; }
+    if(state==='mad'){ setPatience(patience+12); return; }
+
+    const anger = patience;
+    if(kind==='earL'||kind==='earR'){
+      const g = kind==='earL'?earLg:earRg;
+      g.style.transform = (kind==='earL'?'rotate(-22deg)':'rotate(22deg)');
+      setTimeout(()=>{ if(state==='idle') g.style.transform=''; }, 500);
+      say(pick(LINES.ear));
+      setPatience(patience+14);
+    } else if(kind==='nose'){
+      // cross-eyed squash
+      crossEyeUntil = performance.now()+450;
+      pupilL.style.transform='translate(6px,2px)'; pupilR.style.transform='translate(-6px,2px)';
+      say(pick(LINES.nose));
+      setPatience(patience+10);
+    } else if(kind==='tail'){
+      tailG.style.animation='none'; tailG.style.transform='rotate(26deg)';
+      setTimeout(()=>{ tailG.style.transform=''; tailG.style.animation=''; }, 600);
+      say(pick(LINES.tail));
+      setPatience(patience+16);
+    } else if(kind==='belly'){
+      whiskL.style.transform='rotate(8deg)'; whiskR.style.transform='rotate(-8deg)';
+      setTimeout(()=>{ whiskL.style.transform=''; whiskR.style.transform=''; }, 600);
+      say(pick(LINES.belly));
+      setPatience(patience+18);
+    } else {
+      // generic head/body poke -> cycle expressions by anger
+      if(anger < 25)      (Math.random()<.5?doBlink:doGrin)();
+      else if(anger < 50) doScowl();
+      else if(anger < 75) doGasp();
+      else                goMad();
+      setPatience(patience+12);
+      return;
+    }
+    // zone pokes also escalate visible mood
+    if(patience >= 75) goMad();
+    else if(patience >= 50 && state==='idle') doGasp();
+  }
+
+  // zone wiring (hit areas sit above visuals)
+  const zones = [
+    ['headHit','head'], ['noseHit','nose'], ['bellyHit','belly'], ['tailHit','tail'],
+    ['earL','earL'], ['earR','earR']
+  ];
+  zones.forEach(([id,kind])=>{
+    const el=$(id);
+    el.style.pointerEvents='all';
+    el.addEventListener('pointerdown', e=>{ e.stopPropagation(); poke(kind); });
+  });
+  catwrap.addEventListener('pointerdown', ()=>poke('head'));
+
+  /* ---------- gaze + head tracking ---------- */
+  let tx=0, ty=0, cx=0, cy=0, hx=0, hy=0;
+  function onMove(px,py){
+    const r = catwrap.getBoundingClientRect();
+    const nx = ((px - (r.left+r.width/2)) / (r.width/2));
+    const ny = ((py - (r.top+r.height*0.35)) / (r.height/2));
+    tx = Math.max(-1,Math.min(1,nx)); ty = Math.max(-1,Math.min(1,ny));
+  }
+  window.addEventListener('pointermove', e=>onMove(e.clientX,e.clientY), {passive:true});
+  window.addEventListener('touchmove', e=>{ if(e.touches[0]) onMove(e.touches[0].clientX,e.touches[0].clientY); }, {passive:true});
+  (function loop(){
+    cx += (tx-cx)*.12; cy += (ty-cy)*.12;
+    hx += (tx-hx)*.06; hy += (ty-hy)*.06;
+    if(state!=='box'){
+      if(performance.now() > crossEyeUntil){
+        pupilL.style.transform = `translate(${cx*9}px,${cy*7}px)`;
+        pupilR.style.transform = `translate(${cx*9}px,${cy*7}px)`;
+      }
+      headG.style.transform = `rotate(${hx*4}deg) translate(${hx*8}px,${hy*5}px)`;
+    }
+    requestAnimationFrame(loop);
+  })();
+
+  /* ---------- idle life ---------- */
+  function idleBlink(){
+    if(state==='idle'){
+      eyeLlid.setAttribute('ry','25'); eyeRlid.setAttribute('ry','25');
+      setTimeout(()=>{ eyeLlid.setAttribute('ry','0.5'); eyeRlid.setAttribute('ry','0.5'); }, 160);
+    }
+    setTimeout(idleBlink, 2600 + Math.random()*3200);
+  }
+  setTimeout(idleBlink, 2200);
+
+  // patience decays slowly
+  setInterval(()=>{ if(state!=='box' && state!=='mad' && patience>0) setPatience(patience-2.2); }, 1200);
+
+  function hideHint(){
+    if(hintHidden) return; hintHidden=true;
+    hint.style.transition='opacity .5s'; hint.style.opacity='0';
+    setTimeout(()=>hint.remove(), 600);
+  }
+
+  say("Oh. A visitor. Pet me correctly or not at all.", 3400);
+
+  // demo hook for previews: index.html#demo-scowl etc.
+  const demo=(location.hash||'').replace('#demo-','');
+  if(demo && demo!==location.hash){
+    demoFreeze = true;
+    setTimeout(()=>{
+      if(demo==='blink')doBlink();
+      else if(demo==='scowl')doScowl();
+      else if(demo==='gasp')doGasp();
+      else if(demo==='mad'){setPatience(80);goMad();}
+      else if(demo==='box')explode();
+    },600);
+  }
+})();
+</script>
+</body>
+</html>
