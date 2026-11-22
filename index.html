@@ -805,7 +805,7 @@ body{
     if(!m) return 'head';
     const p = pt.matrixTransform(m.inverse());
     const x = p.x, y = p.y;
-    if(Math.hypot(x-200,y-205) < 34) return 'nose';
+    if(Math.hypot(x-200,y-207) < 44) return 'nose';
     if(y < 132 && x >= 96 && x < 170) return 'earL';
     if(y < 132 && x >= 230 && x <= 304) return 'earR';
     if(x > 272 && y > 240 && y < 400) return 'tail';
